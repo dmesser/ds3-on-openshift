@@ -21,7 +21,8 @@ objects:
     source:
       type: Git
       git:
-        uri: https://github.com/dvdstore/ds3.git
+        uri: https://github.com/dmesser/ds3-on-openshift.git
+        ref: no-data-files
     strategy:
       type: Source
       sourceStrategy:
@@ -147,7 +148,7 @@ objects:
               value: "${MYSQL_PASSWORD}"
             - name: MYSQL_DATABASE
               value: "DS3"
-          image: centos/mysql-57-centos7:latest
+          image: ' '
           resources:
             limits:
               memory: ${MYSQL_MEMORY_LIMIT}
@@ -158,6 +159,17 @@ objects:
         - name: ${DATABASE_SERVICE_NAME}-data
           persistentVolumeClaim:
             claimName: ${DATABASE_SERVICE_NAME}-db-storage
+    triggers:
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - mysql
+        from:
+          kind: ImageStreamTag
+          name: mysql:5.7
+          namespace: openshift
+      type: ImageChange
+    - type: ConfigChange
 - apiVersion: v1
   kind: Service
   metadata:
