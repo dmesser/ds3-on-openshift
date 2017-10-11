@@ -185,6 +185,8 @@ objects:
 - apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
+    annotations:
+      volume.kubernetes.io/storage-class: ${STORAGE_CLASS}
     name: ${DATABASE_SERVICE_NAME}-db-storage
   spec:
     accessModes:
@@ -222,3 +224,8 @@ parameters:
   name: DS3_MEMORY_LIMIT
   required: true
   value: 512Mi
+- description: Maximum amount of memory the DS3 container can use.
+  displayName: The StorageClass to use to request the volume
+  name: STORAGE_CLASS
+  required: true
+  value: glusterfs-storage
