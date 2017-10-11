@@ -155,10 +155,15 @@ objects:
           volumeMounts:
           - mountPath: /var/lib/mysql/data
             name: ${DATABASE_SERVICE_NAME}-data
+          - mountPath: /tmp/data
+            name: ${DATABASE_SERVICE_NAME}-sample-data
         volumes:
         - name: ${DATABASE_SERVICE_NAME}-data
           persistentVolumeClaim:
             claimName: ${DATABASE_SERVICE_NAME}-db-storage
+        - name: ${DATABASE_SERVICE_NAME}-sample-data
+          persistentVolumeClaim:
+            claimName: ${SAMPLE_DATA_PVC}
     triggers:
     - imageChangeParams:
         automatic: true
@@ -185,10 +190,9 @@ objects:
 - apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
-    annotations:
-      volume.kubernetes.io/storage-class: ${STORAGE_CLASS}
     name: ${DATABASE_SERVICE_NAME}-db-storage
   spec:
+    storageClassName: ${STORAGE_CLASS}
     accessModes:
       - "ReadWriteOnce"
     resources:
@@ -224,8 +228,13 @@ parameters:
   name: DS3_MEMORY_LIMIT
   required: true
   value: 512Mi
-- description: Maximum amount of memory the DS3 container can use.
-  displayName: The StorageClass to use to request the volume
+- description: The StorageClass to use to request the volume
+  displayName: StorageClass for MySQL backend
   name: STORAGE_CLASS
   required: true
   value: glusterfs-storage
+- description: Existing PersistentVolumeClaim to mount to MySQL on /tmp/sampledata
+  displayName: Sample Data PVC
+  name: SAMPLE_DATA_PVC
+  required: true
+  value: sample-data
