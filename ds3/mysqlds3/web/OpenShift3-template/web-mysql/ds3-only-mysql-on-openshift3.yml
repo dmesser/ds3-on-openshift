@@ -1,0 +1,124 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: ds3-web-mysql-on-openshift3
+  annotations:
+    description: "DS3 Web interface and MySQL on OpenShift 3"
+    tags: "instant-app"
+objects:
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    name:  ${APP_NAME}-database
+  spec:
+    replicas: 1
+    selector:
+      deploymentconfig: ${APP_NAME}-database
+    template:
+      metadata:
+        labels:
+          deploymentconfig: ${APP_NAME}-database
+      spec:
+        containers:
+        - name: mysql
+          env:
+            - name: MYSQL_USER
+              value: "ds3"
+            - name: MYSQL_PASSWORD
+              value: "${MYSQL_PASSWORD}"
+            - name: MYSQL_ROOT_PASSWORD
+              value: "${MYSQL_PASSWORD}"
+            - name: MYSQL_DATABASE
+              value: "DS3"
+          image: ' '
+          resources:
+            limits:
+              memory: ${MYSQL_MEMORY_LIMIT}
+          volumeMounts:
+          - mountPath: /var/lib/mysql/data
+            name: ${APP_NAME}-database-storage
+          - mountPath: /tmp/data
+            name: ${APP_NAME}-sample-data
+        volumes:
+        - name: ${APP_NAME}-database-storage
+          persistentVolumeClaim:
+            claimName: ${APP_NAME}-database-storage
+        - name: ${APP_NAME}-sample-data
+          persistentVolumeClaim:
+            claimName: ${SAMPLE_DATA_PVC}
+    triggers:
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - mysql
+        from:
+          kind: ImageStreamTag
+          name: mysql:5.7
+          namespace: openshift
+      type: ImageChange
+    - type: ConfigChange
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: ${APP_NAME}-database
+  spec:
+    ports:
+      - name: mysql
+        port: 3306
+        protocol: TCP
+        targetPort: 3306
+    loadBalancerIP: ${EXTERNAL_IP}
+    type: LoadBalancer
+    selector:
+      deploymentconfig: ${APP_NAME}-database
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: ${APP_NAME}-database-storage
+  spec:
+    storageClassName: ${STORAGE_CLASS}
+    accessModes:
+      - "ReadWriteOnce"
+    resources:
+      requests:
+        storage: ${MYSQL_VOLUME_CAPACITY}
+parameters:
+- name: MYSQL_PASSWORD
+  value: toomanysecrets
+- description: The name assigned to all of the frontend objects defined in this template.
+  displayName: Name
+  name: APP_NAME
+  required: true
+  value: ds3-mysql-web
+- description: The exposed hostname that will route to the DS3 app.
+  displayName: Application Hostname
+  name: APPLICATION_DOMAIN
+- description: The size of the volume for MySQL data files.
+  displayName: MySQL Volume Capacity
+  name: MYSQL_VOLUME_CAPACITY
+  required: true
+  value: 10Gi
+- description: Maximum amount of memory the MySQL container can use.
+  displayName: MySQL Memory Limit
+  name: MYSQL_MEMORY_LIMIT
+  required: true
+  value: 1Gi
+- description: Maximum amount of memory the DS3 container can use.
+  displayName: DS3 App Memory Limit
+  name: DS3_MEMORY_LIMIT
+  required: true
+  value: 512Mi
+- description: The StorageClass to use to request the volume
+  displayName: StorageClass for MySQL backend
+  name: STORAGE_CLASS
+  required: true
+  value: glusterfs-storage
+- description: Existing PersistentVolumeClaim to mount to MySQL on /tmp/sampledata
+  displayName: Sample Data PVC
+  name: SAMPLE_DATA_PVC
+  required: true
+  value: sample-data
+- description: The external IP the MySQL service should use (always port 3306).
+  displayName: External IP
+  name: EXTERNAL_IP
+  required: true
