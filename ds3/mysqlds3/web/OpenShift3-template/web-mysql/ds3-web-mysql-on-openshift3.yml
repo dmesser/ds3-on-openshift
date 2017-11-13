@@ -40,7 +40,60 @@ objects:
   metadata:
     name: ${APP_NAME}-php-config
   data:
-    php.ini: |-
+    ds3.ini: |-
+      zend_extension=opcache.so
+      opcache.enable=1
+      opcache.memory_consumption=128
+      opcache.interned_strings_buffer=8
+      opcache.max_accelerated_files=4000
+      opcache.revalidate_freq=2
+      opcache.fast_shutdown=1
+      opcache.blacklist_filename=/etc/opt/rh/rh-php56/php.d/opcache*.blacklist
+      opcache.max_file_size=1M
+      zend_extension=xdebug.so
+      extension=bcmath.so
+      extension=bz2.so
+      extension=calendar.so
+      extension=ctype.so
+      extension=curl.so
+      extension=dom.so
+      extension=exif.so
+      extension=fileinfo.so
+      extension=ftp.so
+      extension=gd.so
+      extension=gettext.so
+      extension=gmp.so
+      extension=iconv.so
+      extension=intl.so
+      extension=ldap.so
+      extension=mbstring.so
+      extension=mysqlnd.so
+      extension=pdo.so
+      extension=pgsql.so
+      extension=phar.so
+      extension=posix.so
+      extension=shmop.so
+      extension=simplexml.so
+      extension=soap.so
+      extension=sockets.so
+      extension=sqlite3.so
+      extension=sysvmsg.so
+      extension=sysvsem.so
+      extension=sysvshm.so
+      extension=tokenizer.so
+      extension=xml.so
+      extension=xmlwriter.so
+      extension=xsl.so
+      extension=zip.so
+      extension=mysql.so
+      extension=mysqli.so
+      extension=pdo_mysql.so
+      extension=pdo_pgsql.so
+      extension=pdo_sqlite.so
+      extension=wddx.so
+      extension=xmlreader.so
+      extension = json.so
+      extension=memcache.so
       error_reporting = E_ALL ^ (E_DEPRECATED)
       display_errors = On
       mysql.default_host = ${APP_NAME}-database
@@ -67,22 +120,14 @@ objects:
             - containerPort: 8080
               protocol: TCP
           imagePullPolicy: Always
-          lifecycle:
-            postStart:
-              exec:
-                command:
-                  - /usr/bin/ln
-                  - '-s'
-                  - /phphack/php.ini
-                  - /etc/opt/rh/rh-php56/php.d/phphack.ini
           volumeMounts:
-            - mountPath: /phphack/
-              name: volume-phphack
+            - mountPath: /etc/opt/rh/rh-php56/php.d/
+              name: volume-php-config
         volumes:
           - configMap:
               name: ${APP_NAME}-php-config
               defaultMode: 420
-            name: volume-phphack
+            name: volume-php-config
         resources:
           limits:
             memory: ${DS3_MEMORY_LIMIT}
