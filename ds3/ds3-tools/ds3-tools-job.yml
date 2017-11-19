@@ -1,0 +1,28 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ds3-generate-data
+spec:
+  template:
+    metadata:
+      name: ds3-generate-data
+    spec:
+      volumes:
+      - name: ds3-source-data
+        persistentVolumeClaim:
+          claimName: ds3-source-data
+      containers:
+      - name: ds3-tools
+        image: docker-registry.default.svc:5000/dvdstore-mysql/ds3-tools@sha256:95f386f29e6bf349acfb05a1e31d785f4332199fed7a99ef852ded5eb9deb912
+        command:
+         - "/bin/bash"
+         - "/bin/generate_data.sh"
+        volumeMounts:
+        - mountPath: "/ds3"
+          name: ds3-source-data
+        env:
+          - name: DB_SIZE
+            value: '20'
+          - name: DB_TYPE
+            value: mysql
+      restartPolicy: Never
