@@ -8,6 +8,8 @@ RUN  yum repolist --disablerepo=* && \
 
 RUN mkdir /ds3
 
+COPY generate_data.sh /bin/
+
 ENTRYPOINT ["mysql"]
 
 CMD ["-u", "${MYSQL_USER}", "-p", "${MYSQL_PASSWORD}", "-h", "${MYSQL_HOST}", "<", "${SQL_FILE}"]
