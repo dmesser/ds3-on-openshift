@@ -23,6 +23,7 @@ objects:
       git:
         uri: https://github.com/dmesser/ds3-on-openshift.git
         ref: no-data-files
+      contextDir: "ds3/mysqlds3/web/php5"
     strategy:
       type: Source
       sourceStrategy:
@@ -37,7 +38,7 @@ objects:
 - apiVersion: v1
   kind: ConfigMap
   metadata:
-    name: php.ini
+    name: ${APP_NAME}-php-config
   data:
     php.ini: |-
       error_reporting = E_ALL ^ (E_DEPRECATED)
@@ -79,7 +80,7 @@ objects:
               name: volume-phphack
         volumes:
           - configMap:
-              name: php.ini
+              name: ${APP_NAME}-php-config
               defaultMode: 420
             name: volume-phphack
         resources:
@@ -100,7 +101,7 @@ objects:
   metadata:
     annotations:
       description: Exposes and load balances the application pods
-      service.alpha.openshift.io/dependencies: '[{"name": "${DATABASE_SERVICE_NAME}",
+      service.alpha.openshift.io/dependencies: '[{"name": "${APP_NAME}-database",
         "kind": "Service"}]'
     name:  ${APP_NAME}
   spec:
@@ -110,7 +111,7 @@ objects:
         targetPort: 8080
         protocol: TCP
     selector:
-      deploymentconfig: ds3-web
+      deploymentconfig: ${APP_NAME}
 - apiVersion: v1
   kind: Route
   metadata:
@@ -127,15 +128,15 @@ objects:
 - apiVersion: v1
   kind: DeploymentConfig
   metadata:
-    name:  ${DATABASE_SERVICE_NAME}
+    name:  ${APP_NAME}-database
   spec:
     replicas: 1
     selector:
-      deploymentconfig: ${DATABASE_SERVICE_NAME}
+      deploymentconfig: ${APP_NAME}-database
     template:
       metadata:
         labels:
-          deploymentconfig: ${DATABASE_SERVICE_NAME}
+          deploymentconfig: ${APP_NAME}-database
       spec:
         containers:
         - name: mysql
@@ -154,14 +155,14 @@ objects:
               memory: ${MYSQL_MEMORY_LIMIT}
           volumeMounts:
           - mountPath: /var/lib/mysql/data
-            name: ${DATABASE_SERVICE_NAME}-data
+            name: ${APP_NAME}-database-storage
           - mountPath: /tmp/data
-            name: ${DATABASE_SERVICE_NAME}-sample-data
+            name: ${APP_NAME}-sample-data
         volumes:
-        - name: ${DATABASE_SERVICE_NAME}-data
+        - name: ${APP_NAME}-database-storage
           persistentVolumeClaim:
-            claimName: ${DATABASE_SERVICE_NAME}-db-storage
-        - name: ${DATABASE_SERVICE_NAME}-sample-data
+            claimName: ${APP_NAME}-database-storage
+        - name: ${APP_NAME}-sample-data
           persistentVolumeClaim:
             claimName: ${SAMPLE_DATA_PVC}
     triggers:
@@ -178,7 +179,7 @@ objects:
 - apiVersion: v1
   kind: Service
   metadata:
-    name: ${DATABASE_SERVICE_NAME}
+    name: ${APP_NAME}-database
   spec:
     ports:
       - name: mysql
@@ -186,11 +187,11 @@ objects:
         protocol: TCP
         targetPort: 3306
     selector:
-      deploymentconfig: ${DATABASE_SERVICE_NAME}
+      deploymentconfig: ${APP_NAME}-database
 - apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
-    name: ${DATABASE_SERVICE_NAME}-db-storage
+    name: ${APP_NAME}-database-storage
   spec:
     storageClassName: ${STORAGE_CLASS}
     accessModes:
@@ -209,10 +210,6 @@ parameters:
 - description: The exposed hostname that will route to the DS3 app.
   displayName: Application Hostname
   name: APPLICATION_DOMAIN
-- displayName: Database Service Name
-  name: DATABASE_SERVICE_NAME
-  required: true
-  value: mysql
 - description: The size of the volume for MySQL data files.
   displayName: MySQL Volume Capacity
   name: MYSQL_VOLUME_CAPACITY
