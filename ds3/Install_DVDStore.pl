@@ -55,21 +55,8 @@ GetOptions(
 						"db-size-unit=s" => \$database_size_str,
 						"db-type=s" => \$database_type,
 						"os-type=s" => \$db_sys_type
-					) or die("Error in command line arguments\n")
+					) or die("Error in command line arguments\n");
 
-
-print "Please enter following parameters: \n";
-print "***********************************\n";
-print "Please enter database size (integer expected) : ";
-chomp($database_size = <STDIN>);
-print "Please enter whether above database size is in (MB / GB) : ";
-chomp($database_size_str = <STDIN>);
-print "Please enter database type (MSSQL / MYSQL / PGSQL / ORACLE) : ";
-chomp($database_type = <STDIN>);
-print "Please enter system type on which DB Server is installed (WIN / LINUX) : ";
-chomp($db_sys_type = <STDIN>);
-print "***********************************\n";
-#***************************************************************************************
 
 #Set the flags according to parameters passed. These flags will be used further
 if(lc($database_size_str) eq lc($is_GB_Size_S))
