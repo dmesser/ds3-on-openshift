@@ -1,10 +1,6 @@
 # mysqlds3_create_all.sh
 # start in ./ds3/mysqlds3
 cd build
-echo "MYSQL_USER=${MYSQL_USER}"
-echo "MYSQL_PASSWORD=${MYSQL_PASSWORD}"
-echo "MYSQL_HOST=${MYSQL_HOST}"
-echo Warning messgaes about using password via command line are normal......
 echo Creating database
 mysql --user=${MYSQL_USER} --password=${MYSQL_PASSWORD} --host=${MYSQL_HOST} < mysqlds3_create_db.sql
 echo Creating Indexes
