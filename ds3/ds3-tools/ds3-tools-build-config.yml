@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: List
+items:
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    name: ds3-tools
+  spec:
+    lookupPolicy:
+      local: true
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    name: ds3-tools
+    creationTimestamp:
+    labels:
+      name: ds3-tools
+  spec:
+    source:
+      type: Git
+      git:
+        uri: git://github.com/dmesser/ds3-on-openshift.git
+        ref: mysql-init
+      contextDir: ds3/ds3-tools
+    strategy:
+      type: Docker
+      dockerStrategy:
+        from:
+          kind: DockerImage
+          name: "registry.access.redhat.com/rhel7:latest"
+        noCache: true
+    output:
+      to:
+        kind: ImageStreamTag
+        name: "ds3-tools:latest"
+    resources: {}

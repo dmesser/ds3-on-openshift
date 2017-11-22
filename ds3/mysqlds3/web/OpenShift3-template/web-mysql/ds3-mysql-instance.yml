@@ -1,0 +1,78 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: ds3-mysql-master
+  annotations:
+    description: "DS3 MySQL instance on OpenShift 3"
+    tags: "instant-app"
+objects:
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    name:  ${APP_NAME}-database
+  spec:
+    replicas: 1
+    selector:
+      deploymentconfig: ${APP_NAME}-database
+    template:
+      metadata:
+        labels:
+          deploymentconfig: ${APP_NAME}-database
+      spec:
+        containers:
+        - name: mysql
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: "ds3"
+          image: ' '
+          resources:
+            limits:
+              memory: ${MYSQL_MEMORY_LIMIT}
+          volumeMounts:
+          - mountPath: /var/lib/mysql/data
+            name: ${APP_NAME}-database-storage
+        volumes:
+        - name: ${APP_NAME}-database-storage
+          persistentVolumeClaim:
+            claimName: ${PVC_NAME}
+    triggers:
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - mysql
+        from:
+          kind: ImageStreamTag
+          name: mysql:5.7
+          namespace: openshift
+      type: ImageChange
+    - type: ConfigChange
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: ${APP_NAME}-database
+  spec:
+    ports:
+      - name: mysql
+        port: 3306
+        protocol: TCP
+        targetPort: 3306
+    type: LoadBalancer
+    selector:
+      deploymentconfig: ${APP_NAME}-database
+parameters:
+- name: MYSQL_PASSWORD
+  value: toomanysecrets
+- description: The name assigned to all of the frontend objects defined in this template.
+  displayName: Name
+  name: APP_NAME
+  required: true
+  value: ds3-mysql-instance-1
+- description: Maximum amount of memory the MySQL container can use.
+  displayName: MySQL Memory Limit
+  name: MYSQL_MEMORY_LIMIT
+  required: true
+  value: 1Gi
+- description: The PVC to use serving the MySQL database
+  displayName: PersistentVolumeClaim
+  name: PVC_NAME
+  required: true

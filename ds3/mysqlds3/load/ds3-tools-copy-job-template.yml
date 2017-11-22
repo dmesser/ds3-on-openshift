@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: ds3-copy-job
+  annotations:
+    description: "Copy all data from a source to a target PVC"
+objects:
+- apiVersion: batch/v1
+  kind: Job
+  metadata:
+    name: ds3-copy-data
+  spec:
+    template:
+      metadata:
+        name: ds3-copy-data
+      spec:
+        volumes:
+        - name: ds3-source-volume
+          persistentVolumeClaim:
+            claimName: ${SOURCE_PVC}
+        - name: ds3-target-volume
+          persistentVolumeClaim:
+            claimName: ${DEST_PVC}
+        containers:
+        - name: ds3-copy
+          image: ds3-tools:latest
+          command:
+           - "rsync"
+           - "-ropltv"
+           - "/source/"
+           - "/target/"
+          volumeMounts:
+          - mountPath: "/source"
+            name: ds3-source-volume
+          - mountPath: "/target"
+            name: ds3-target-volume
+        restartPolicy: Never
+    backoffLimit: 1
+parameters:
+- name: SOURCE_PVC
+  description: The name of the PVC to copy data from.
+  displayName: Soure PVC
+  required: true
+  value: ds3-mysql-master-database-storage
+- name: DEST_PVC
+  description: The name of the PVC to copy data to
+  displayName: Target PVC
+  required: true

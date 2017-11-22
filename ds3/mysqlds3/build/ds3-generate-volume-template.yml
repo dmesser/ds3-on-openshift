@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: ds3-generate-source-data-volume
+  annotations:
+    description: "Generate the source data volume for DS3 CSV files"
+objects:
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: ds3-source-data
+  spec:
+    storageClassName: ${STORAGE_CLASS}
+    accessModes:
+      - "ReadWriteOnce"
+    resources:
+      requests:
+        storage: ${SOURCE_VOLUME_CAPACITY}
+parameters:
+- description: The capacity of the volume holding the generated CSV files.
+  displayName: Source Volume Capacity
+  name: SOURCE_VOLUME_CAPACITY
+  required: true
+  value: 10Gi
+- description: The StorageClass to use to request the volume
+  displayName: StorageClass for Source Volume
+  name: STORAGE_CLASS
+  required: true
+  value: glusterfs-storage

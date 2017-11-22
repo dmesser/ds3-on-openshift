@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: ds3-generate-source-data-job
+  annotations:
+    description: "Generate the source data for DS3 CSV files"
+objects:
+- apiVersion: batch/v1
+  kind: Job
+  metadata:
+    name: ds3-generate-data
+  spec:
+    template:
+      metadata:
+        name: ds3-generate-data
+      spec:
+        volumes:
+        - name: ds3-source-data
+          persistentVolumeClaim:
+            claimName: ds3-source-data
+        containers:
+        - name: ds3-tools
+          image: ds3-tools:latest
+          command:
+           - "/bin/bash"
+           - "/bin/generate_data.sh"
+          volumeMounts:
+          - mountPath: "/ds3"
+            name: ds3-source-data
+          env:
+            - name: DB_SIZE
+              value: ${DB_SIZE}
+            - name: DB_TYPE
+              value: ${DB_TYPE}
+        restartPolicy: Never
+    backoffLimit: 1
+    activeDeadlineSeconds: 1200
+parameters:
+- description: The target DB size of DS3.
+  displayName: DS3 Database Size
+  name: DB_SIZE
+  required: true
+  value: 10Gi
+- description: The type of the DS3 database to generate data for.
+  displayName: DS3 Database type
+  name: DB_TYPE
+  required: false
+  value: mysql

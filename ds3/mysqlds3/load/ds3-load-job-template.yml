@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: ds3-load-source-data-job
+  annotations:
+    description: "Load the source data for DS3 from CSV files to a MySQL host"
+objects:
+- apiVersion: batch/v1
+  kind: Job
+  metadata:
+    name: ds3-load-data
+  spec:
+    template:
+      metadata:
+        name: ds3-load-data
+      spec:
+        volumes:
+        - name: ds3-source-data
+          persistentVolumeClaim:
+            claimName: ds3-source-data
+        containers:
+        - name: ds3-loader
+          image: ds3-tools:latest
+          command:
+           - "/bin/bash"
+           - "mysqlds3_create_all.sh"
+          workingDir: "/ds3/ds3-on-openshift/ds3/mysqlds3/"
+          volumeMounts:
+          - mountPath: "/ds3"
+            name: ds3-source-data
+          env:
+            - name: MYSQL_USER
+              value: "${MYSQL_USER}"
+            - name: MYSQL_PASSWORD
+              value: "${MYSQL_PASSWORD}"
+            - name: MYSQL_HOST
+              value: "${MYSQL_HOST}"
+        restartPolicy: Never
+    backoffLimit: 1
+parameters:
+- name: MYSQL_USER
+  description: The name of mysql user to log on.
+  displayName: MySQL User
+  value: ds3
+  required: true
+- name: MYSQL_PASSWORD
+  description: The mysql password to use for logging on.
+  displayName: MySQL Password
+  value: toomanysecrets
+  required: true
+- name: MYSQL_HOST
+  description: The mysql host to connect to.
+  displayName: MySQL Host
+  required: true
