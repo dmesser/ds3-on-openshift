@@ -1,4 +1,4 @@
-#!/bin/Bash
+#!/bin/bash
 
 ## break on any non-zero exit codes
 set -e
