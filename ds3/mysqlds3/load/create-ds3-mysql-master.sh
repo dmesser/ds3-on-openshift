@@ -56,7 +56,7 @@ do
  fi
 done
 
-echo "Getting external ingress point of MySQL instance"
+echo "Getting external ingress point of MySQL instance..."
 
 #mysql_external_ip=$(oc get svc/ds3-mysql-master-database -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
 mysql_external_ip=$(oc get svc/ds3-mysql-master-database -o jsonpath='{.spec.clusterIP}')
@@ -64,6 +64,8 @@ mysql_external_ip=$(oc get svc/ds3-mysql-master-database -o jsonpath='{.spec.clu
 if [[ ${mysql_external_ip} == "" ]]; then
   echo "Could not determine external ingress point of MySQL master"
   exit 1
+else
+  echo -n ${mysql_external_ip}
 fi
 
 echo "Checking source PVC"
